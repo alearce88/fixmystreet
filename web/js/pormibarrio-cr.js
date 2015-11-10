@@ -272,21 +272,23 @@ $( document ).ready(function() {
 		$('#send-password').slideToggle();
 	});
 	//Disable submits if terms agree
-    if ( $("#terms-agree").length ){
-    	$("input[type='submit']").attr("disabled", true);
-    	$("button[type='submit']").attr("disabled", true);
-    	$(".btn-social").attr("disabled", true);
-    	//But suscribe to problems
-    	$('#btn-suscribe').attr("disabled", false);
-    	$('#key-tool-report-abuse').attr("disabled", false);
-    	$('#key-tool-hide').attr("disabled", false);
+    if ( $("#terms_agree").length ){
+    	//Terms and conditions
+	    $("button").click(function(e) {
+	    	if (!$("#terms_agree").attr("checked")){
+	    		e.preventDefault();
+	    		$('.terms-agree-error').remove();
+                $('.terms_agree').after('<p class="error-m terms-agree-error">Debe aceptar los términos y condiciones</p>');
+	    	}
+		});
+		$('input[type="submit"]').click(function(e) {
+	    	if (!$("#terms_agree").attr("checked")){
+	    		e.preventDefault();
+	    		$('.terms-agree-error').remove();
+                $(this).after('<p class="error-m terms-agree-error">Debe aceptar los términos y condiciones</p>');
+	    	}
+		});
 	}
-    //Terms and conditions
-    $("#terms-agree").click(function() {
-	  $("input[type='submit']").attr("disabled", !this.checked);
-	  $("button[type='submit']").attr("disabled", !this.checked);
-	  $(".btn-social").attr("disabled", !this.checked);
-	});
 	//DATE PICKERS
 	if ( $('#stats-start-date').length ){
 		$( "#stats-start-date" ).datepicker({
@@ -412,12 +414,53 @@ function smallPIN(obj){
 		//});
 	}
 }
+
+function set_active_nav_button(button_id){
+	$("#report-button").css("background-color","#1e2e3d");
+	$("#report-button").css("border-left","solid 3px #1e2e3d");
+	$("#report-all-button").css("background-color","#1e2e3d");
+	$("#report-all-button").css("border-left","solid 3px #1e2e3d");
+	$("#home-button").css("background-color","#1e2e3d");
+	$("#home-button").css("border-left","solid 3px #1e2e3d");
+	$("#faq-button").css("background-color","#1e2e3d");
+	$("#faq-button").css("border-left","solid 3px #1e2e3d");
+	$("#"+button_id).css("background-color","#fc4349");
+	$("#"+button_id).css("border-left","solid 3px #ff8c8c");
+}
+
+function set_mouse_in_button(element){
+	//alert(element.children(":first").css("background-color"));
+	if(element.children(":first").css("background-color")!="rgb(252, 67, 73)"){
+		element.children(":first").css("background-color","#131e29");
+		element.children(":first").css("border-left","solid 3px #495f73");
+	}
+	//$("#"+obj.children(":first").id).css("border-left","solid 3px #495f73");
+}
+
+function set_mouse_out_button(element){
+	if(element.children(":first").css("background-color")!="rgb(252, 67, 73)"){
+		element.children(":first").css("background-color","#1e2e3d");
+		element.children(":first").css("border-left","none");
+	}
+}
+
+function go_home(){
+	set_active_nav_button('home-button');
+	return;
+}
+
+function go_faq(){
+	set_active_nav_button('faq-button');
+	return;
+}
+
 //MOSTRAR REPORTE
 /*	$('div.it-r').click(function(){
 		$('div.c-report').show();
 	});
 */
 function report(timeout, zoom){
+	set_active_nav_button('report-button');
 	if (typeof fixmystreet != 'undefined'){
 		switch (fixmystreet.page) {
 			case 'around':
@@ -425,7 +468,7 @@ function report(timeout, zoom){
 				$('#side').hide();
 				break;
 			default:
-				location.href = '/around?latitude='+fixmystreet.latitude+';longitude='+fixmystreet.longitude+'&zoom=4';
+				location.href = '/around?latitude='+fixmystreet.latitude+';longitude='+fixmystreet.longitude+'&zoom=4' + '&list=0';
 		}
 	}
 	else {
@@ -434,8 +477,9 @@ function report(timeout, zoom){
 }
 
 function report_list(timeout, zoom){
+	set_active_nav_button('report-all-button');
 	if (typeof fixmystreet != 'undefined'){
-		alert('PAGE: '+fixmystreet.page);
+		//alert('PAGE: '+fixmystreet.page);
 		switch (fixmystreet.page) {
 			case 'around':
 				$('#side-form').hide();
@@ -449,17 +493,18 @@ function report_list(timeout, zoom){
 		}
 	}
 	else {
-		alert('Geolocate TRUE');
 		geolocate(timeout, zoom, true);
 	}
 }
 
-function geolocate(timeout, zoom, list){
-	var list = '';
-	if (typeof list !== 'undefined'){
+function geolocate(timeout, zoom, is_list){
+	var list = '&list=0';
+	if (typeof is_list != 'undefined'){
     	list = '&list=1';
     }
-	setTimeout(function(){location.href = '/around?latitude=10.056;longitude=-84.433&zoom=' + zoom + list}, timeout);
+	setTimeout(function(){location.href = '/around?latitude=10.056;longitude=-84.433&zoom=' + zoom + list}, 2500);
+	$('.overlay').html('<div id="loader_throbber">Intentando geolocalizarlo...<br/><div class="three-quarters-loader"></div></div>');
+    $('.overlay').show();0
 	if (geo_position_js.init()) {
 	    console.log('Va a init');
 	    geo_position_js.getCurrentPosition(function(pos) {
@@ -469,13 +514,15 @@ function geolocate(timeout, zoom, list){
 	        location.href = '/around?latitude=' + latitude + ';longitude=' + longitude + '&zoom=' + zoom + list;
 	    }, 
 	    function(err) {
-	    	alert('No hemos podido geolocalizarlo');
+	    	$('#loader_throbber').append('<br/>No hemos podido geolocalizarlo.');
+	    	$('#loader_throbber').append('<br/>Cargando Municipalidad de Palmares por defecto.');
 	    }, 
 	    {
 	        enableHighAccuracy: true,
-	        timeout: 10000
+	        timeout: 2500
 	    });
 	}
+	//$('#loader_throbber').css("display","none");
 }
 
 //RESPONSIVE TEXT
