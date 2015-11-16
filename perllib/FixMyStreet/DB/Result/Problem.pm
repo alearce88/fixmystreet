@@ -533,7 +533,7 @@ meta data about the report.
 
 sub has_comments {
   my $self = shift;
-  
+
   my $c = $self->comments->search( { problem_id => $self->id } );
   if ( $c->first ) {
     return 1;
@@ -546,7 +546,8 @@ sub has_comments {
 sub meta_line {
     my ( $problem, $c ) = @_;
 
-    my $date_time = Utils::prettify_dt( $problem->confirmed );
+    #my $date_time = Utils::prettify_dt( $problem->confirmed );
+    my $date_time = $problem->confirmed->strftime('%d/%m/%Y a las %H:%M');
     my $meta = '';
 
     # FIXME Should be in cobrand
@@ -633,18 +634,17 @@ sub body {
 }
 
 sub category_group {
-	my ( $problem, $c ) = @_;
+	my $problem = shift;
 	
 	if ( $problem->category ) {
-		my $contact = $c->model('DB::Contact')->find({ category => $problem->category, deleted => 0 });
-		
+		my $contact = FixMyStreet::App->model('DB::Contact')->find({ category => $problem->category, deleted => 0 });
 		if ( $contact ) {
 			if ( $contact->group_id ) {
 				return $contact->group_id;
 			}
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -664,7 +664,7 @@ sub can_display_external_id {
 
 # TODO Some/much of this could be moved to the template
 
-# either: 
+# either:
 #   "sent to council 3 mins later"
 #   "[Council name] ref: XYZ"
 # or
@@ -687,7 +687,7 @@ sub processed_summary_string {
     }
     if ($duration_clause and $external_ref_clause) {
         return "$duration_clause, $external_ref_clause"
-    } else { 
+    } else {
         return $duration_clause || $external_ref_clause
     }
 }
@@ -824,6 +824,44 @@ sub as_hashref {
     };
 }
 
+sub deadline {
+  my $problem = shift;
+
+  my $parser = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d' );
+  my $now = DateTime->now(formatter => $parser);
+  #Get deadlines
+  my $problem_group = $problem->category_group;
+  my $cobrand = FixMyStreet::Cobrand->get_class_for_moniker($problem->cobrand)->new();
+  if ($cobrand->deadlines){
+    my %deadlines = $cobrand->problem_rules();
+    my $deadline = { 'class' => 'noDeadLine' };
+
+    if ( !$problem->is_fixed and $problem->is_open ){
+      if ( exists $deadlines{$problem_group} ){
+        foreach my $deadline_actions (@{ $deadlines{$problem_group} }){
+          #Deadline is now - maxtime - nonwork
+          my $deadline_date = $cobrand->to_working_days_date($now, $deadline_actions->{max_time});
+          if ($problem->lastupdate_council) {
+            if ( $deadline_date->epoch >= $problem->lastupdate_council->epoch ){
+              $deadline = $deadline_actions;
+              last;
+            }
+          }
+          else{
+            if ($problem->confirmed){
+              if ( $deadline_date->epoch >= $problem->confirmed->epoch ){
+                $deadline = $deadline_actions;
+                last;
+              }
+            }
+          }
+        }
+      }
+    }
+    return $deadline;
+  }
+  return 0;
+}
 # we need the inline_constructor bit as we don't inherit from Moose
 __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 

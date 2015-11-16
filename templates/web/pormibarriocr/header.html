@@ -16,7 +16,7 @@
   <meta property="og:site_name" content="[% c.cobrand.site_title %]">
   <meta property="og:description" content="Por Mi Barrio CR es una aplicación web creada por ACCESA y DATA que te permite hacer reportes sobre problemas en tu comunidad, comunicándoselo directamente a la Municipalidad.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="[% c.cobrand.base_url %]/cobrands/pormibarrio/images/pormibarrio.png">
+  <meta property="og:image" content="[% c.cobrand.base_url %]/cobrands/pormibarriocr/images/pormibarriocr_share.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="500">
   <meta property="og:image:height" content="500">
@@ -48,6 +48,9 @@
 
   <script type="text/javascript" src="[% version('/js/jquery-slimscroll/jquery.slimscroll.min.js') %]"></script>
   <!--<script type="text/javascript" src="[% version('/js/jquery.easing.1.3.js') %]"></script>-->
+  <script src="[% start %][% version('/js/jquery-ui-1.11.4/jquery-ui.min.js') %]" charset="utf-8"></script>
+  <link rel="stylesheet" href="[% start %][% version('/js/jquery-ui-1.11.4/jquery-ui.min.css') %]">
+
   <script type="text/javascript" src="[% version('/js/geoconverter.js') %]"></script>
 
   <!--CSS-->
@@ -138,7 +141,7 @@
     window.fbAsyncInit = function() {
       FB.init({
         [% IF c.config.FACEBOOK_APP_ID %]
-        appId: '[% c.config.FACEBOOK_APP_ID %]', 
+        appId: '[% c.config.FACEBOOK_APP_ID %]',
         [% END %]
         status: true,
         xfbml: true
@@ -186,8 +189,8 @@
             <div class="info-user" id="info-user">
                 <!-- Vista logueado -->
                 [% IF c.user_exists %]
-                <div class="dropdown user-log-on" style="display:block">
-                    <a data-toggle="dropdown" class="user-name" href="#">
+                <div id="dropdown-user-menu" class="dropdown user-log-on" style="display:block">
+                    <a id="data-toggle-link" data-toggle="dropdown" class="user-name" href="#">
                         [% IF c.user.picture_url %]
                             <img class="img-circle" alt="" id="current_user_avatar">
                             <script>
@@ -238,6 +241,9 @@
                  [% ELSE %]
                  <!--Vista sin login-->
                     <div class="list-inline dropdown user-log-on">
+                        <a class="user-name" href="#" style="display:none;">
+                          <img class="img-circle" alt="" src="/cobrands/pormibarrio/images/no-profile-picture.jpg">Anonimo
+                        </a>
                         <a class="green" href="/auth">Inicia sesión ó Registrate</a>
                     </div>
                 <!-- /Vista sin login-->

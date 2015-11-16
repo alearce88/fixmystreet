@@ -64,10 +64,11 @@ sub iphone : Global : Args(0) {
 sub stats : Global : Args(0) {
     my ( $self, $c ) = @_;
 
-    my ( $start_date, $end_date, @errors );
-    my $parser = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d' );
+    my ( $end_date, @errors );
+    my $parser = DateTime::Format::Strptime->new( pattern => '%d/%m/%Y' );
     my $now_start = DateTime->now(formatter => $parser);
     my $now = DateTime->now(formatter => $parser);
+    my $start_date = DateTime->new( year => 2015, month => 8, day => 01 );
 
     if ( $c->req->param('last_week') ){
         $end_date = $now;
@@ -83,7 +84,6 @@ sub stats : Global : Args(0) {
     }
     elsif ( $c->req->param('all') ){
         $end_date = $now;
-        $start_date = '2014-08-01';
     }
     else{
         if (!$c->req->param('end_date')){
@@ -93,10 +93,7 @@ sub stats : Global : Args(0) {
             $end_date = $parser->parse_datetime( $c->req->param('end_date') ) ;
         }
 
-        if (!$c->req->param('start_date')){
-            $start_date = '2014-08-01';
-        }
-        else{
+        if ($c->req->param('start_date')){
             $start_date = $parser->parse_datetime( $c->req->param('start_date') );
         }
     }
@@ -163,8 +160,6 @@ sub stats : Global : Args(0) {
         }
     }
 
-    my $one_day = DateTime::Duration->new( days => 1 );
-
     my %select = (
             state => [ FixMyStreet::DB::Result::Problem->visible_states() ],
             select => [ 
@@ -177,7 +172,7 @@ sub stats : Global : Args(0) {
         {
             -AND => [
                 'confirmed' => { '>=', $start_date },
-                'confirmed' => { '<=', $end_date + $one_day },
+                'confirmed' => { '<=', $end_date },
                 'state'     => { '!=', 'hidden' }
             ],
         },
