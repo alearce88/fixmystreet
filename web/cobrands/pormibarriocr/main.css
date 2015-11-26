@@ -2693,28 +2693,43 @@ tr.problem-warning{
 
 /*PRINT*/
 #print-header{
-visibility: hidden;
+	visibility: hidden;
+	height: 15px;
 }
 
 @media print {
 
   #print-header{
-visibility: visible;
+  	margin-top: 25px;
+	visibility: visible;
+	height: 200px;
+  }
+
+  #report_photo_link{
+  	display: none;
+  }
+
+  #report_photo{
+  	margin-left: 30px;
+  }
+
+  #report_photo_img{
+  	max-width: 95%;
   }
 
   #display_problem_print {
-  visibility: hidden;
+  	visibility: hidden;
   }
   #display_problem_close {
-  visibility: hidden;
+  	visibility: hidden;
   }
 
   #comment-login{
-  display:none;
-  visibility: hidden;
+  	display:none;
+  	visibility: hidden;
   }
   #comments-on-report{
-  visibility: visible;
+  	visibility: visible;
   }
 }
 
